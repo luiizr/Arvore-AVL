@@ -1,0 +1,129 @@
+<main class="page-shell">
+  <section class="hero-card">
+    <div class="hero-copy">
+      <p class="eyebrow">Visualizador de estruturas</p>
+      <h1>Monte e atualize sua arvore AVL</h1>
+      <p class="hero-text">
+        Escolha o tipo de arvore disponivel, defina se deseja adicionar ou remover
+        e veja os numeros refletidos no grafico logo abaixo.
+      </p>
+    </div>
+
+    <form class="control-panel" (ngSubmit)="submitValue()">
+      <label class="field">
+        <span>Tipo de arvore</span>
+        <select [(ngModel)]="selectedTreeType" name="treeType">
+          @for (treeType of treeTypes; track treeType) {
+            <option [value]="treeType">{{ treeType }}</option>
+          }
+        </select>
+        <small>Somente AVL esta disponivel nesta versao.</small>
+      </label>
+
+      <div class="field">
+        <span>Acao</span>
+        <div class="action-switch" role="group" aria-label="Escolha entre adicionar ou remover">
+          <button
+            type="button"
+            class="switch-button"
+            [class.is-active]="selectedAction === 'add'"
+            (click)="setAction('add')"
+          >
+            Adicionar
+          </button>
+          <button
+            type="button"
+            class="switch-button"
+            [class.is-active]="selectedAction === 'remove'"
+            (click)="setAction('remove')"
+          >
+            Remover
+          </button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>Numero</span>
+        <div class="value-row">
+          <input
+            type="number"
+            name="valueInput"
+            [(ngModel)]="valueInput"
+            placeholder="Ex.: 42"
+          />
+          <button type="submit" class="submit-button">
+            {{ selectedAction === 'add' ? 'Adicionar' : 'Remover' }}
+          </button>
+        </div>
+      </label>
+    </form>
+
+    <p class="feedback">{{ feedback }}</p>
+
+    <div class="number-bank">
+      <div class="number-bank-header">
+        <h2>Numeros atuais</h2>
+        <span>{{ numbers.length }} item(ns)</span>
+      </div>
+
+      <div class="chip-list">
+        @for (number of numbers; track number) {
+          <span class="chip">{{ number }}</span>
+        } @empty {
+          <span class="empty-copy">Nenhum numero inserido ainda.</span>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="graph-card">
+    <div class="graph-header">
+      <div>
+        <p class="eyebrow">Grafico</p>
+        <h2>Arvore AVL em tempo real</h2>
+      </div>
+      <p class="graph-copy">Os numeros abaixo mostram a estrutura balanceada da arvore.</p>
+    </div>
+
+    <div class="graph-surface">
+      @if (tree) {
+        <div class="tree-stage">
+          <ng-container *ngTemplateOutlet="treeNode; context: { $implicit: tree }"></ng-container>
+        </div>
+      } @else {
+        <div class="empty-graph">
+          A arvore esta vazia. Adicione um numero para gerar o grafico.
+        </div>
+      }
+    </div>
+  </section>
+</main>
+
+<ng-template #treeNode let-node>
+  <div class="tree-group">
+    <div class="tree-bubble">
+      <span>{{ node.value }}</span>
+      <small>h{{ node.height }}</small>
+    </div>
+
+    @if (node.left || node.right) {
+      <div class="tree-children">
+        <div class="tree-child" [class.tree-child--ghost]="!node.left">
+          @if (node.left) {
+            <ng-container *ngTemplateOutlet="treeNode; context: { $implicit: node.left }"></ng-container>
+          } @else {
+            <div class="tree-placeholder">vazio</div>
+          }
+        </div>
+
+        <div class="tree-child" [class.tree-child--ghost]="!node.right">
+          @if (node.right) {
+            <ng-container *ngTemplateOutlet="treeNode; context: { $implicit: node.right }"></ng-container>
+          } @else {
+            <div class="tree-placeholder">vazio</div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</ng-template>
