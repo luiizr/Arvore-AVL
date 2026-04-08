@@ -1,20 +1,23 @@
 
 import java.util.Scanner;
 
-import avl.ArvoreAVL;
-
 public class Main {
     public static void main(String[] args) {
+        // Scanner para leitura da entrada 
         Scanner scanner = new Scanner(System.in);
+        // Importando a classe ArvoreAVL, para poder criar a árvore junto das coisas da main
         ArvoreAVL arvore = new ArvoreAVL();
+        // Variável para controlar se o usuário ainda está utilizando o sistema de menu ou não
         boolean executando = true;
 
+        System.out.println("Atividade EDNL - Árvore AVL - Coleguinha");
         while (executando) {
             imprimirMenu();
             int opcao = lerInteiro(scanner, "Escolha uma opcao: ");
 
             switch (opcao) {
                 case 1:
+                    // Vai abrir a função e pedir o número para inserir
                     inserirNo(scanner, arvore);
                     break;
                 case 2:
@@ -25,9 +28,6 @@ public class Main {
                     break;
                 case 4:
                     mostrarArvore(arvore);
-                    break;
-                case 5:
-                    mostrarEmOrdem(arvore);
                     break;
                 case 0:
                     executando = false;
@@ -43,17 +43,18 @@ public class Main {
 
     private static void imprimirMenu() {
         System.out.println();
-        System.out.println("========== ARVORE AVL ==========");
-        System.out.println("1 - Incluir no");
-        System.out.println("2 - Remover no");
-        System.out.println("3 - Buscar no");
+        System.out.println("--- Menu ---");
+        System.out.println("1 - Adicionar nó");
+        System.out.println("2 - Remover nó");
+        System.out.println("3 - Buscar nó");
         System.out.println("4 - Mostrar arvore");
-        System.out.println("5 - Mostrar em ordem");
         System.out.println("0 - Sair");
     }
 
     private static void inserirNo(Scanner scanner, ArvoreAVL arvore) {
+        // Número que ele quer inserir
         int chave = lerInteiro(scanner, "Digite a chave para inserir: ");
+        // if porque na função a gente verifica se a chave já existe ou não, para não permitir chaves duplicadas
         if (arvore.inserir(chave)) {
             System.out.println("Chave " + chave + " inserida com sucesso.");
         } else {
@@ -87,18 +88,10 @@ public class Main {
         System.out.println("Altura da arvore: " + arvore.altura());
     }
 
-    private static void mostrarEmOrdem(ArvoreAVL arvore) {
-        if (arvore.estaVazia()) {
-            System.out.println("Arvore vazia.");
-            return;
-        }
-
-        System.out.println("Em ordem: " + arvore.emOrdem());
-    }
-
+    // Função para garantir que, enquanto o usuário não digitar um número inteiro válido, ele continue pedindo para o usuário digitar um número inteiro válido
     private static int lerInteiro(Scanner scanner, String mensagem) {
         while (true) {
-            System.out.print(mensagem);
+            System.out.println(mensagem);
             String entrada = scanner.nextLine().trim();
 
             try {

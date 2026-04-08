@@ -1,27 +1,44 @@
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class ArvoreAVL {
+    private static final int ESQUERDA = 1;
+    private static final int DIREITA = -1;
+
+    private static final class NoAVL {
+        int chave;
+        int altura;
+        int fatorBalanceamento;
+        NoAVL esquerda;
+        NoAVL direita;
+
+        NoAVL(int chave) {
+            this.chave = chave;
+            this.altura = 1;
+            this.fatorBalanceamento = 0;
+        }
+    }
+
     private NoAVL raiz;
     private int tamanho;
+    private boolean alterado;
 
     public boolean inserir(int chave) {
-        boolean[] inserido = new boolean[1];
-        raiz = inserir(raiz, chave, inserido);
-        if (inserido[0]) {
+        alterado = false;
+        raiz = inserir(raiz, chave);
+        if (alterado) {
             tamanho++;
         }
-        return inserido[0];
+        return alterado;
     }
 
     public boolean remover(int chave) {
-        boolean[] removido = new boolean[1];
-        raiz = remover(raiz, chave, removido);
-        if (removido[0]) {
+        alterado = false;
+        raiz = remover(raiz, chave);
+        if (alterado) {
             tamanho--;
         }
-        return removido[0];
+        return alterado;
     }
 
     public boolean contem(int chave) {
@@ -91,128 +108,97 @@ public class ArvoreAVL {
         }
     }
 
-    public String emOrdem() {
-        StringBuilder sb = new StringBuilder();
-        emOrdem(raiz, sb);
-        return sb.toString();
-    }
-
-    private NoAVL inserir(NoAVL no, int chave, boolean[] inserido) {
+    private NoAVL inserir(NoAVL no, int chave) {
         if (no == null) {
-            inserido[0] = true;
+            alterado = true;
             return new NoAVL(chave);
         }
 
         if (chave < no.chave) {
-            no.esquerda = inserir(no.esquerda, chave, inserido);
+            no.esquerda = inserir(no.esquerda, chave);
         } else if (chave > no.chave) {
-            no.direita = inserir(no.direita, chave, inserido);
+            no.direita = inserir(no.direita, chave);
         } else {
             return no;
         }
 
-        atualizarNo(no);
-        return rebalancear(no);
+        return balancear(no);
     }
 
-    private NoAVL remover(NoAVL no, int chave, boolean[] removido) {
+    private NoAVL remover(NoAVL no, int chave) {
         if (no == null) {
             return null;
         }
 
         if (chave < no.chave) {
-            no.esquerda = remover(no.esquerda, chave, removido);
+            no.esquerda = remover(no.esquerda, chave);
         } else if (chave > no.chave) {
-            no.direita = remover(no.direita, chave, removido);
+            no.direita = remover(no.direita, chave);
         } else {
-            removido[0] = true;
+            alterado = true;
 
-            if (no.esquerda == null) {
-                return no.direita;
-            }
-
-            if (no.direita == null) {
-                return no.esquerda;
+            if (no.esquerda == null || no.direita == null) {
+                return no.esquerda != null ? no.esquerda : no.direita;
             }
 
             NoAVL sucessor = menorNo(no.direita);
             no.chave = sucessor.chave;
-            no.direita = remover(no.direita, sucessor.chave, new boolean[1]);
+            no.direita = remover(no.direita, sucessor.chave);
         }
 
+        return balancear(no);
+    }
+
+    private NoAVL balancear(NoAVL no) {
         atualizarNo(no);
-        return rebalancear(no);
-    }
 
-    private NoAVL menorNo(NoAVL no) {
-        NoAVL atual = no;
-        while (atual.esquerda != null) {
-            atual = atual.esquerda;
-        }
-        return atual;
-    }
-
-    private NoAVL rebalancear(NoAVL no) {
         if (no.fatorBalanceamento > 1) {
             if (fatorBalanceamento(no.esquerda) < 0) {
-                no.esquerda = rotacaoEsquerda(no.esquerda);
+                no.esquerda = rotacionar(no.esquerda, ESQUERDA);
             }
-            return rotacaoDireita(no);
+            return rotacionar(no, DIREITA);
         }
 
         if (no.fatorBalanceamento < -1) {
             if (fatorBalanceamento(no.direita) > 0) {
-                no.direita = rotacaoDireita(no.direita);
+                no.direita = rotacionar(no.direita, DIREITA);
             }
-            return rotacaoEsquerda(no);
+            return rotacionar(no, ESQUERDA);
         }
 
         return no;
     }
 
-    private NoAVL rotacaoEsquerda(NoAVL b) {
-        NoAVL a = b.direita;
-        NoAVL subArvoreIntermediaria = a.esquerda;
+    private NoAVL rotacionar(NoAVL no, int direcao) {
+        NoAVL novoTopo = direcao == ESQUERDA ? no.direita : no.esquerda;
+        NoAVL subArvoreIntermediaria = direcao == ESQUERDA ? novoTopo.esquerda : novoTopo.direita;
 
-        a.esquerda = b;
-        b.direita = subArvoreIntermediaria;
+        if (direcao == ESQUERDA) {
+            novoTopo.esquerda = no;
+            no.direita = subArvoreIntermediaria;
+        } else {
+            novoTopo.direita = no;
+            no.esquerda = subArvoreIntermediaria;
+        }
 
-        // Fórmulas do PDF para atualizar o FB sem recalcular a subárvore inteira.
-        int fbOriginalB = b.fatorBalanceamento;
-        int fbOriginalA = a.fatorBalanceamento;
-        b.fatorBalanceamento = fbOriginalB + 1 - Math.min(fbOriginalA, 0);
-        a.fatorBalanceamento = fbOriginalA + 1 + Math.max(b.fatorBalanceamento, 0);
-
-        atualizarAltura(b);
-        atualizarAltura(a);
-        return a;
+        atualizarNo(no);
+        atualizarNo(novoTopo);
+        return novoTopo;
     }
 
-    private NoAVL rotacaoDireita(NoAVL b) {
-        NoAVL a = b.esquerda;
-        NoAVL subArvoreIntermediaria = a.direita;
-
-        a.direita = b;
-        b.esquerda = subArvoreIntermediaria;
-
-        // Fórmulas do PDF para atualizar o FB sem recalcular a subárvore inteira.
-        int fbOriginalB = b.fatorBalanceamento;
-        int fbOriginalA = a.fatorBalanceamento;
-        b.fatorBalanceamento = fbOriginalB - 1 - Math.max(fbOriginalA, 0);
-        a.fatorBalanceamento = fbOriginalA - 1 + Math.min(b.fatorBalanceamento, 0);
-
-        atualizarAltura(b);
-        atualizarAltura(a);
-        return a;
+    private NoAVL menorNo(NoAVL no) {
+        while (no.esquerda != null) {
+            no = no.esquerda;
+        }
+        return no;
     }
 
     private void atualizarNo(NoAVL no) {
-        atualizarAltura(no);
-        no.fatorBalanceamento = altura(no.esquerda) - altura(no.direita);
-    }
-
-    private void atualizarAltura(NoAVL no) {
+        if (no == null) {
+            return;
+        }
         no.altura = 1 + Math.max(altura(no.esquerda), altura(no.direita));
+        no.fatorBalanceamento = altura(no.esquerda) - altura(no.direita);
     }
 
     private int altura(NoAVL no) {
@@ -221,19 +207,6 @@ public class ArvoreAVL {
 
     private int fatorBalanceamento(NoAVL no) {
         return no == null ? 0 : no.fatorBalanceamento;
-    }
-
-    private void emOrdem(NoAVL no, StringBuilder sb) {
-        if (no == null) {
-            return;
-        }
-
-        emOrdem(no.esquerda, sb);
-        if (sb.length() > 0) {
-            sb.append(' ');
-        }
-        sb.append(formatarNo(no));
-        emOrdem(no.direita, sb);
     }
 
     private int maiorRotulo(NoAVL no) {
